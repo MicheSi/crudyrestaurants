@@ -1,5 +1,6 @@
 package com.lambdaschool.crudyrestaurants;
 
+import com.github.javafaker.Faker;
 import com.lambdaschool.crudyrestaurants.models.Email;
 import com.lambdaschool.crudyrestaurants.models.Employee;
 import com.lambdaschool.crudyrestaurants.models.JobTitle;
@@ -10,6 +11,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Random;
+import java.util.Set;
 
 @Transactional
 @Component
@@ -19,6 +24,8 @@ public class SeedData implements CommandLineRunner {
 
     @Autowired
     private JobTitleRepository jobTitlerepos;
+
+    private Random random = new Random();
 
     @Override
     public void run(String... args) throws Exception {
@@ -56,5 +63,27 @@ public class SeedData implements CommandLineRunner {
         emp3.setName("JOHN");
         emp3.setSalary(75000.00);
         employeeService.save(emp3);
+
+        Faker nameFaker = new Faker(new Locale("en-US"));
+
+        Set<String> empNamesSet = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            empNamesSet.add(nameFaker.name().fullName());
+        }
+        for (String empName: empNamesSet) {
+            Employee employee = new Employee(); // create new employee object that will be removed at end of loop
+            employee.setName(empName); // set the name
+            employee.setSalary(50000.00 + (100000.00 * random.nextDouble())); // randomly generate salary from 50000 to 150000
+
+            int randomInt = random.nextInt(10); // random number of emails from 0-9
+            for (int j = 0; j < randomInt; j++) {
+                employee.getEmails()
+                        .add(new Email(nameFaker.internet().emailAddress(), employee));
+            }
+            employee.getJobtitles()
+                    .add(jt1); // assigning them their first job title
+            employeeService.save(employee);
+        }
     }
+
 }
